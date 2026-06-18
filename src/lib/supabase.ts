@@ -1,22 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 import { logAuthEvent } from '@/utils/auth-logger';
 import { shouldWarnAboutGoogleOAuth, logWebViewDetection } from '@/utils/webview-detection';
+import { mockSupabase } from './mockSupabase';
 
-// Use environment variables - fail fast if not provided
+// Check if we want to run offline with local mock supabase
+const useMock = import.meta.env.VITE_USE_MOCK_SUPABASE === 'true';
+
+// Use environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate required environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
+// Validate required environment variables if not in mock mode
+if (!useMock && (!supabaseUrl || !supabaseAnonKey)) {
   throw new Error(
     'Missing required environment variables. Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.'
   );
 }
 
 // Log for debugging (only show first 10 chars for security)
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV && !useMock) {
   console.log('Supabase URL:', supabaseUrl);
-  console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10));
+  console.log('Supabase Key (first 10 chars):', supabaseAnonKey?.substring(0, 10));
 }
 
 // Detect iOS devices
@@ -65,22 +69,24 @@ const customStorage = {
   }
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    storage: customStorage,
-    storageKey: 'supabase_auth_token',
-    debug: isIOS(), // Enable debug mode on iOS devices
-  },
-  global: {
-    headers: {
-      'x-client-info': `duitr/${isIOS() ? 'ios' : 'web'}`
-    }
-  }
-});
+export const supabase = useMock
+  ? (mockSupabase as any)
+  : createClient(supabaseUrl!, supabaseAnonKey!, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+        storage: customStorage,
+        storageKey: 'supabase_auth_token',
+        debug: isIOS(), // Enable debug mode on iOS devices
+      },
+      global: {
+        headers: {
+          'x-client-info': `duitr/${isIOS() ? 'ios' : 'web'}`
+        }
+      }
+    });
 
 // Helper functions for authentication
 export const signUpWithEmail = async (email: string, password: string) => {
