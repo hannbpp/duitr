@@ -48,7 +48,7 @@ const AuthCallback = () => {
       // If we detect we're on a 404 page, try to recover by redirecting to the main callback URL
       if (window.location.pathname !== '/auth/callback') {
         window.location.href = import.meta.env.MODE === 'production'
-          ? 'https://duitr.my.id/auth/callback'
+          ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || window.location.origin}/auth/callback`
           : `${window.location.origin}/auth/callback`;
       }
     }

@@ -5,7 +5,6 @@ import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 // Lazy load components for code splitting
-const LandingPage = React.lazy(() => import('@/pages/LandingPage'));
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const Transactions = React.lazy(() => import('@/pages/Transactions'));
 const BudgetPage = React.lazy(() => import('@/pages/BudgetPage'));
@@ -21,11 +20,8 @@ const ResetPassword = React.lazy(() => import('@/pages/auth/ResetPassword'));
 const AuthCallback = React.lazy(() => import('@/pages/auth/AuthCallback'));
 const TransactionDetailPage = React.lazy(() => import('@/pages/TransactionDetailPage'));
 const EditCategoryPage = React.lazy(() => import('@/pages/EditCategoryPage'));
-const SupabaseTestPage = React.lazy(() => import('@/pages/SupabaseTestPage'));
 const PrivacyPolicy = React.lazy(() => import('@/pages/PrivacyPolicy'));
 const TermsOfService = React.lazy(() => import('@/pages/TermsOfService'));
-const TestDatePicker = React.lazy(() => import('@/components/ui/test-date-picker').then(module => ({ default: module.TestDatePicker })));
-const LoginButtonTest = React.lazy(() => import('@/components/test/LoginButtonTest'));
 
 // Enhanced loading component that's aware of translation state
 const LoadingSpinner = () => {
@@ -89,10 +85,6 @@ export const protectedRoutes = [
 
 export const publicRoutes = [
   {
-    path: '/landing',
-    element: <LazyWrapper><LandingPage /></LazyWrapper>
-  },
-  {
     path: '/login',
     element: <LazyWrapper><Login /></LazyWrapper>
   },
@@ -122,20 +114,7 @@ export const publicRoutes = [
   }
 ];
 
-export const testRoutes = [
-  {
-    path: '/test-datepicker',
-    element: <LazyWrapper><TestDatePicker /></LazyWrapper>
-  },
-  {
-    path: '/test-supabase',
-    element: <LazyWrapper><SupabaseTestPage /></LazyWrapper>
-  },
-  {
-    path: '/test-login-button',
-    element: <LazyWrapper><LoginButtonTest /></LazyWrapper>
-  }
-];
+export const testRoutes: typeof publicRoutes = [];
 
 export const fallbackRoutes = [
   {

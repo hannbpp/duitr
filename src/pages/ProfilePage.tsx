@@ -13,7 +13,6 @@ import {
   ChevronLeft,
   X,
   ZoomIn,
-  Heart
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -128,8 +127,9 @@ const ProfilePage: React.FC = () => {
       window.dispatchEvent(new Event('profileImageUpdated'));
       toast({ title: t('settings.profileImageUpdated') });
 
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: t('settings.uploadFailed'), description: error.message || t('settings.failedToUploadImage') });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : t('settings.failedToUploadImage');
+      toast({ variant: 'destructive', title: t('settings.uploadFailed'), description: msg });
       console.error('Upload error:', error);
     } finally {
       setIsUploadingImage(false);
@@ -149,8 +149,9 @@ const ProfilePage: React.FC = () => {
       toast({ title: t('settings.profileUpdated') });
       // Optionally update the user context or state if needed after successful update
       // For example: fetchUser(); // If you have such a function in AuthContext
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: t('settings.updateFailed'), description: error.message || t('settings.failedToUpdateProfile') });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : t('settings.failedToUpdateProfile');
+      toast({ variant: 'destructive', title: t('settings.updateFailed'), description: msg });
     } finally {
       setIsSaving(false);
     }
@@ -164,14 +165,6 @@ const ProfilePage: React.FC = () => {
       console.error('Error logging out:', error);
       toast({ variant: 'destructive', title: t('settings.logoutFailed'), description: t('settings.errorLoggingOut') });
     }
-  };
-
-  const handleDonateClick = () => {
-    window.open('https://saweria.co/faizintifada', '_blank');
-  };
-
-  const handleInstagramClick = () => {
-    window.open('https://instagram.com/faizintifada', '_blank');
   };
 
   const handleProfileImageClick = () => {
@@ -508,42 +501,6 @@ const ProfilePage: React.FC = () => {
                   </Button>
                 </motion.div>
                 
-                {/* Donate Button */}
-                <motion.div
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.55, duration: 0.3 }}
-                >
-                  <Button
-                    onClick={handleDonateClick}
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border border-border mt-4 rounded-lg font-semibold"
-                    aria-label="Donate to Developer via Saweria"
-                  >
-                    <Heart className="mr-2 h-4 w-4" />Support the Author<Heart className="ml-2 h-4 w-4" />
-                  </Button>
-                </motion.div>
-                
-                {/* Copyright Text */}
-                <motion.div 
-                  className="text-center mt-4 text-xs text-muted-foreground"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.3 }}
-                >
-                  Made by{" "}
-                  <motion.button 
-                    onClick={handleInstagramClick}
-                    className="text-muted-foreground hover:text-primary underline focus:outline-none"
-                    aria-label="Visit Faiz Intifada's Instagram"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Faiz Intifada
-                  </motion.button>
-                </motion.div>
               </CardContent>
             </Card>
           </motion.div>

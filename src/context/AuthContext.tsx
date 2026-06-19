@@ -147,14 +147,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           emailRedirectTo: import.meta.env.MODE === 'production'
-            ? 'https://duitr.my.id/auth/callback'
+            ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || window.location.origin}/auth/callback`
             : `${window.location.origin}/auth/callback`,
           data: {
             name: email.split('@')[0],
           }
         }
       });
-      
+
       console.log('AuthContext: Signup result:', { error });
       
       if (error) {
@@ -223,11 +223,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         provider: 'google',
         options: {
           redirectTo: import.meta.env.MODE === 'production'
-            ? 'https://duitr.my.id/auth/callback'
+            ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || window.location.origin}/auth/callback`
             : `${window.location.origin}/auth/callback`,
         },
       });
-      
+
       if (error) {
         logAuthEvent('auth_context_google_signin_error', {}, error);
         return { success: false, message: error.message };
@@ -277,11 +277,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: email,
         options: {
           emailRedirectTo: import.meta.env.MODE === 'production'
-            ? 'https://duitr.my.id/auth/callback'
+            ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || window.location.origin}/auth/callback`
             : `${window.location.origin}/auth/callback`,
         }
       });
-      
+
       if (error) {
         logAuthEvent('resend_verification_email_error', { email }, error);
         return { success: false, message: error.message };

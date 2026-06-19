@@ -1,1 +1,16 @@
-{"projectId":"prj_LCjeogZuIYaVevhglXRjgGacSfAc","orgId":"team_2TCRZT1h488TmB6a4jMkU5ZM","projectName":"trae_duitr_k0jm","neverMindDeployCard":true}
+{
+  "projectId": "prj_QLBO8nQxTYSSAXKBFkNN3o4CJuvs",
+  "orgId": "team_alVKMwYZW7qDIPJGjWBjrBuB",
+  "projectName": "duitr-app",
+  "settings": {
+    "createdAt": 1781768755205,
+    "framework": "vite",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

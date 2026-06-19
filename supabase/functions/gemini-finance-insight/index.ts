@@ -1,9 +1,18 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
-};
+
+const allowedOrigins = [
+  Deno.env.get('ALLOWED_ORIGIN') || '',
+].filter(Boolean);
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') || '';
+  const allowed = allowedOrigins.length === 0 || allowedOrigins.includes(origin) ? origin : '';
+  return {
+    'Access-Control-Allow-Origin': allowed || allowedOrigins[0] || '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
 
 // =================================================================
 // Type definitions for budget predictions
@@ -541,6 +550,7 @@ Rangkum situasi keuangan keseluruhan dan berikan SATU prioritas aksi untuk user.
 // Main server function
 // =================================================================
 serve(async (req)=>{
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, {

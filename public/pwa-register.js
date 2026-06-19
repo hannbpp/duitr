@@ -208,18 +208,12 @@ if ('serviceWorker' in navigator) {
       
       // First, try to unregister any existing service workers to avoid conflicts
       // On public domain, force refresh all service workers
-      const isPublicDomain = window.location.hostname === 'duitr.my.id' || 
-                            window.location.hostname.endsWith('.duitr.my.id');
-                            
+      const isPublicDomain = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
       if (isPublicDomain) {
-        console.log('Running on public domain, forcing service worker refresh');
-        // Clear caches to ensure fresh files
         if ('caches' in window) {
           caches.keys().then(cacheNames => {
-            cacheNames.forEach(cacheName => {
-              console.log('Deleting cache:', cacheName);
-              caches.delete(cacheName);
-            });
+            cacheNames.forEach(cacheName => caches.delete(cacheName));
           });
         }
       }
@@ -242,7 +236,7 @@ if ('serviceWorker' in navigator) {
           console.error('First registration attempt failed:', firstError);
           
           // Try a different registration strategy if first attempt fails
-          if (window.location.hostname !== 'localhost' && window.location.hostname !== 'duitr.my.id') {
+          if (isPublicDomain) {
             console.log('Trying alternative strategy for service worker registration');
             return registerSW(swUrlNoCaching, { 
               scope: '/',

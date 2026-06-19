@@ -96,7 +96,7 @@ export const signUpWithEmail = async (email: string, password: string) => {
     password,
     options: {
       emailRedirectTo: import.meta.env.MODE === 'production'
-        ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.my.id'}/auth/callback`
+        ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.vercel.app'}/auth/callback`
         : `${window.location.origin}/auth/callback`,
       data: {
         name: email.split('@')[0], // Use part of email as name
@@ -144,7 +144,7 @@ export const signInWithGoogle = async () => {
   
   // Set a clean redirect URL without any parameters that might cause issues
   const redirectTo = import.meta.env.MODE === 'production' 
-    ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.my.id'}/auth/callback`
+    ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.vercel.app'}/auth/callback`
     : `${window.location.origin}/auth/callback`;
   
   // Log device info
