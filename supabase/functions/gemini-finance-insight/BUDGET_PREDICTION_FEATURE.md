@@ -400,5 +400,5 @@ console.log(`Summary: ${summary}`);
 
 **Implementation Date:** 2024-01-15  
 **Version:** 1.0.0  
-**Author:** Python Pro Subagent  
+**Author:** Jake  
 **Edge Function:** `gemini-finance-insight/index.ts`

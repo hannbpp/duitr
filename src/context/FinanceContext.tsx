@@ -354,80 +354,13 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           : {}),
       };
       
-      let finalTransactionData;
-      
-      const { data: transactionData, error: transactionError } = await supabase
+      const { data: finalTransactionData, error: transactionError } = await supabase
         .from('transactions')
         .insert(await formatTransactionForDB(newTransactionData))
         .select()
         .single();
-        
-      if (transactionError) {
-        if (transactionError.message.includes('destination_wallet_id') || 
-            transactionError.message.includes('column') || 
-            transactionError.message.includes('schema')) {
-          console.error('Schema error detected:', transactionError);
-          
-          const fallbackData = {
-            amount: transaction.amount,
-            category_id: dbCategoryId,
-            description: transaction.description,
-            date: transaction.date,
-            type: transaction.type,
-            wallet_id: transaction.walletId,
-            user_id: user.id,
-          };
-          
-          if (transaction.type === 'transfer' && transaction.destinationWalletId) {
-            try {
-              const { data: basicTransData, error: basicTransError } = await supabase
-                .from('transactions')
-                .insert(await formatTransactionForDB(fallbackData))
-                .select()
-                .single();
-                
-              if (basicTransError) throw basicTransError;
-              
-              const { error: updateError } = await supabase
-                .from('transactions')
-                .update({
-                  destination_wallet_id: transaction.destinationWalletId,
-                  fee: transaction.fee ?? 0
-                })
-                .eq('id', basicTransData.id);
-                
-              if (updateError) {
-                console.warn('Could not update transfer details:', updateError);
-                finalTransactionData = basicTransData;
-              } else {
-                const { data: updatedTrans } = await supabase
-                  .from('transactions')
-                  .select()
-                  .eq('id', basicTransData.id)
-                  .single();
-                  
-                finalTransactionData = updatedTrans;
-              }
-            } catch (fallbackError: any) {
-              console.error('Fallback transaction insert failed:', fallbackError);
-              throw fallbackError;
-            }
-          } else {
-            const { data: basicData, error: basicError } = await supabase
-              .from('transactions')
-              .insert(fallbackData)
-              .select()
-              .single();
-              
-            if (basicError) throw basicError;
-            finalTransactionData = basicData;
-          }
-        } else {
-          throw transactionError;
-        }
-      } else {
-        finalTransactionData = transactionData;
-      }
+
+      if (transactionError) throw transactionError;
 
       // Update wallet balances 
       if (transaction.type === 'transfer') {
@@ -566,57 +499,17 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Use integer category ID directly (no conversion needed)
         const dbCategoryId = categoryId;
 
-        // Create update data with optional fields to handle schema issues
-        const updateData: {
-          amount: number;
-          category_id: number;
-          description: string;
-          date: string;
-          type: 'income' | 'expense' | 'transfer';
-          wallet_id: string;
-          destination_wallet_id?: string | null;
-          fee?: number | null;
-        } = {
+        const updateData = {
           amount: updatedTransaction.amount,
           category_id: dbCategoryId,
           description: updatedTransaction.description,
           date: updatedTransaction.date,
           type: updatedTransaction.type,
           wallet_id: updatedTransaction.walletId,
+          destination_wallet_id: updatedTransaction.destinationWalletId ?? null,
+          fee: updatedTransaction.fee ?? null,
         };
 
-        // Add optional fields only if needed to avoid schema errors
-        if (updatedTransaction.type === 'transfer') {
-          if (updatedTransaction.destinationWalletId) {
-            try {
-              const { error: testError } = await supabase
-                .from('transactions')
-                .update({ destination_wallet_id: updatedTransaction.destinationWalletId })
-                .eq('id', updatedTransaction.id);
-              
-              if (!testError) {
-                updateData.destination_wallet_id = updatedTransaction.destinationWalletId;
-              }
-            } catch (e) {
-              console.warn('Cannot update destination_wallet_id due to schema issue');
-            }
-
-            try {
-              const { error: feeError } = await supabase
-                .from('transactions')
-                .update({ fee: updatedTransaction.fee ?? 0 })
-                .eq('id', updatedTransaction.id);
-
-              if (!feeError) {
-                updateData.fee = updatedTransaction.fee ?? 0;
-              }
-            } catch (e) {
-              console.warn('Cannot update fee due to schema issue');
-            }
-          }
-        }
-
-        // Update the transaction in the database
         const { data: updatedData, error: updateError } = await supabase
           .from('transactions')
           .update(await formatTransactionForDB(updateData))
@@ -624,30 +517,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           .select()
           .single();
 
-        if (updateError) {
-          // If there's a schema error, try a more basic update
-          if (updateError.message.includes('column') || 
-              updateError.message.includes('schema')) {
-            console.error('Schema error on update:', updateError);
-            
-            // Fallback to basic fields only
-            const { error: basicUpdateError } = await supabase
-              .from('transactions')
-              .update({
-                amount: updatedTransaction.amount,
-                category_id: dbCategoryId,
-                description: updatedTransaction.description,
-                date: updatedTransaction.date,
-                type: updatedTransaction.type,
-                wallet_id: updatedTransaction.walletId,
-              })
-              .eq('id', updatedTransaction.id);
-              
-            if (basicUpdateError) throw basicUpdateError;
-          } else {
-            throw updateError;
-          }
-        }
+        if (updateError) throw updateError;
 
         await Promise.all(walletsToUpdateInDB.map(walletUpdate =>
             supabase
@@ -1052,79 +922,21 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       setWallets(prev => [...prev, newWallet]);
 
       // Create insert data with optional fields
-      const insertData: any = {
+      const insertData = {
         name: wallet.name,
         balance: wallet.balance,
         type: walletType,
         color: wallet.color,
+        icon: wallet.icon || 'wallet',
         user_id: user.id,
       };
-      
-      // Only add icon if it exists in the wallet object
-      if (wallet.icon) {
-        try {
-          // Test if the icon column exists
-          const { error: testError } = await supabase
-            .from('wallets')
-            .update({ icon: wallet.icon })
-            .eq('id', '00000000-0000-0000-0000-000000000000'); // A non-existent ID to safely test
-            
-          if (!testError || !testError.message.includes('column')) {
-            insertData.icon = wallet.icon || 'wallet';
-          }
-        } catch (e) {
-          // Icon column might not exist - that's ok
-          console.warn('Icon column might not exist in wallets table');
-        }
-      }
-      
+
       const { data, error } = await supabase
         .from('wallets')
         .insert(insertData)
         .select();
-      
+
       if (error) {
-        // Try again without icon field if there was an error
-        if (error.message.includes('column') && insertData.icon) {
-          delete insertData.icon;
-          
-          const { data: retryData, error: retryError } = await supabase
-            .from('wallets')
-            .insert(insertData)
-            .select();
-            
-          if (retryError) {
-            setWallets(prev => prev.filter(w => w.id !== tempId));
-            throw retryError;
-          }
-          
-          if (!retryData || retryData.length === 0) {
-            setWallets(prev => prev.filter(w => w.id !== tempId));
-            throw new Error('No data returned from insert operation');
-          }
-          
-          setWallets(prev => 
-            prev.map(w => 
-              w.id === tempId ? {
-                id: retryData[0].id,
-                name: retryData[0].name,
-                balance: retryData[0].balance,
-                type: retryData[0].type || 'cash',
-                color: retryData[0].color,
-                icon: 'wallet', // Set default since db doesn't have this column
-                userId: retryData[0].user_id
-              } : w
-            )
-          );
-          
-          toast({
-            title: 'Wallet added',
-            description: `${wallet.name} has been added to your accounts`,
-          });
-          
-          return;
-        }
-        
         setWallets(prev => prev.filter(w => w.id !== tempId));
         throw error;
       }
@@ -1176,65 +988,27 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         wallet.id === walletToUpdate.id ? walletToUpdate : wallet)
       );
       
-      // Create update data with required fields
-      const updateData: any = {
+      const updateData = {
         name: walletToUpdate.name,
         balance: walletToUpdate.balance,
         type: walletType,
         color: walletToUpdate.color,
+        icon: walletToUpdate.icon || 'wallet',
       };
-      
-      // Only add icon if it exists in the wallet object
-      if (walletToUpdate.icon) {
-        try {
-          // Test if the icon column exists
-          const { error: testError } = await supabase
-            .from('wallets')
-            .update({ icon: 'test' })
-            .eq('id', '00000000-0000-0000-0000-000000000000'); // A non-existent ID to safely test
-            
-          if (!testError || !testError.message.includes('column')) {
-            updateData.icon = walletToUpdate.icon;
-          }
-        } catch (e) {
-          // Icon column might not exist - that's ok
-          console.warn('Icon column might not exist in wallets table');
-        }
-      }
-      
+
       const { error } = await supabase
         .from('wallets')
         .update(updateData)
         .eq('id', walletToUpdate.id);
-      
+
       if (error) {
-        // Try again without the icon field if there was a column error
-        if (error.message.includes('column') && updateData.icon) {
-          delete updateData.icon;
-          
-          const { error: retryError } = await supabase
-            .from('wallets')
-            .update(updateData)
-            .eq('id', walletToUpdate.id);
-            
-          if (retryError) {
-            setWallets(prev => {
-              const originalWallet = wallets.find(w => w.id === updatedWallet.id);
-              return prev.map(wallet => 
-                wallet.id === updatedWallet.id ? (originalWallet || wallet) : wallet
-              );
-            });
-            throw retryError;
-          }
-        } else {
-          setWallets(prev => {
-            const originalWallet = wallets.find(w => w.id === updatedWallet.id);
-            return prev.map(wallet => 
-              wallet.id === updatedWallet.id ? (originalWallet || wallet) : wallet
-            );
-          });
-          throw error;
-        }
+        setWallets(prev => {
+          const originalWallet = wallets.find(w => w.id === updatedWallet.id);
+          return prev.map(wallet =>
+            wallet.id === updatedWallet.id ? (originalWallet || wallet) : wallet
+          );
+        });
+        throw error;
       }
       
       toast({
@@ -1395,6 +1169,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           due_date: item.due_date,
           amount: item.amount,
           icon: item.icon,
+          description: item.description ?? null,
+          lender_name: item.lender_name ?? null,
           user_id: user.id,
           is_settled: false
         })
@@ -1440,6 +1216,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           due_date: updateData.due_date,
           amount: updateData.amount,
           icon: updateData.icon,
+          description: updateData.description ?? null,
+          lender_name: updateData.lender_name ?? null,
           is_settled: updateData.is_settled
         })
         .eq('id', item.id)

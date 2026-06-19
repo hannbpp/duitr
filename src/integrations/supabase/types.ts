@@ -171,15 +171,121 @@ export type Database = {
           },
         ]
       }
+      budget_predictions: {
+        Row: {
+          id: string
+          user_id: string
+          category_id: number | null
+          prediction_date: string
+          period_start: string
+          period_end: string
+          current_spend: number
+          budget_limit: number
+          projected_spend: number
+          overrun_amount: number
+          risk_level: string
+          confidence: number | null
+          days_remaining: number | null
+          recommended_daily_limit: number | null
+          insight: string | null
+          seasonal_note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          category_id?: number | null
+          prediction_date?: string
+          period_start: string
+          period_end: string
+          current_spend: number
+          budget_limit: number
+          projected_spend: number
+          overrun_amount?: number
+          risk_level: string
+          confidence?: number | null
+          days_remaining?: number | null
+          recommended_daily_limit?: number | null
+          insight?: string | null
+          seasonal_note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          category_id?: number | null
+          prediction_date?: string
+          period_start?: string
+          period_end?: string
+          current_spend?: number
+          budget_limit?: number
+          projected_spend?: number
+          overrun_amount?: number
+          risk_level?: string
+          confidence?: number | null
+          days_remaining?: number | null
+          recommended_daily_limit?: number | null
+          insight?: string | null
+          seasonal_note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_predictions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["category_id"]
+          },
+        ]
+      }
+      notification_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          endpoint: string
+          p256dh_key: string
+          auth_key: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          endpoint: string
+          p256dh_key: string
+          auth_key: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          endpoint?: string
+          p256dh_key?: string
+          auth_key?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pinjaman_items: {
         Row: {
           amount: number
           category: string
           created_at: string
+          description: string | null
           due_date: string
           icon: string | null
           id: string
           is_settled: boolean | null
+          lender_name: string | null
           name: string
           user_id: string
         }
@@ -187,10 +293,12 @@ export type Database = {
           amount: number
           category: string
           created_at?: string
+          description?: string | null
           due_date: string
           icon?: string | null
           id?: string
           is_settled?: boolean | null
+          lender_name?: string | null
           name: string
           user_id: string
         }
@@ -198,10 +306,12 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string
+          description?: string | null
           due_date?: string
           icon?: string | null
           id?: string
           is_settled?: boolean | null
+          lender_name?: string | null
           name?: string
           user_id?: string
         }
@@ -214,6 +324,8 @@ export type Database = {
           created_at: string | null
           date: string
           description: string | null
+          destination_wallet_id: string | null
+          fee: number | null
           id: string
           type: string
           user_id: string
@@ -225,6 +337,8 @@ export type Database = {
           created_at?: string | null
           date: string
           description?: string | null
+          destination_wallet_id?: string | null
+          fee?: number | null
           id?: string
           type: string
           user_id: string
@@ -236,6 +350,8 @@ export type Database = {
           created_at?: string | null
           date?: string
           description?: string | null
+          destination_wallet_id?: string | null
+          fee?: number | null
           id?: string
           type?: string
           user_id?: string
@@ -263,6 +379,7 @@ export type Database = {
           balance: number
           color: string
           created_at: string | null
+          icon: string | null
           id: string
           name: string
           type: string
@@ -272,6 +389,7 @@ export type Database = {
           balance?: number
           color: string
           created_at?: string | null
+          icon?: string | null
           id?: string
           name: string
           type: string
@@ -281,6 +399,7 @@ export type Database = {
           balance?: number
           color?: string
           created_at?: string | null
+          icon?: string | null
           id?: string
           name?: string
           type?: string
@@ -332,6 +451,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_inactive_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      cleanup_old_predictions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       delete_transfer_transaction: {
         Args: {
           transaction_id: string
@@ -340,6 +467,16 @@ export type Database = {
           transfer_amount: number
         }
         Returns: undefined
+      }
+      get_active_subscriptions: {
+        Args: { p_user_id: string }
+        Returns: {
+          id: string
+          endpoint: string
+          p256dh_key: string
+          auth_key: string
+          created_at: string
+        }[]
       }
       log_migration_error: {
         Args: { step_name: string; err_message: string }
